@@ -8,3 +8,10 @@ src-tauri/gen
 # 本地运行辅助/日志，不入库
 work
 *.tsbuildinfo
+# Python sidecar
+viscv_server/.venv
+viscv_server/build
+viscv_server/*.spec
+__pycache__/
+*.pyc
+src-tauri/binaries/

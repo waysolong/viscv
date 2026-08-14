@@ -12,7 +12,7 @@ pub struct Step {
     pub params: HashMap<String, serde_json::Value>,
 }
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct HistogramBins {
     pub gray: Vec<u32>,
     pub red: Vec<u32>,
@@ -20,7 +20,7 @@ pub struct HistogramBins {
     pub blue: Vec<u32>,
 }
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ImageInfo {
     pub data_url: String,
@@ -68,7 +68,7 @@ pub struct AppSettings {
     pub check_on_start: bool,
 }
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateInfo {
     pub current: String,

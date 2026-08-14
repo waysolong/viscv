@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "viscv-server"
+version = "0.1.0"
+description = "ViSCV Python image enhancement engine (OpenCV sidecar)"
+requires-python = ">=3.10"
+dependencies = [
+  "opencv-python",
+  "numpy",
+]

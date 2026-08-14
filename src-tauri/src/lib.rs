@@ -1,10 +1,11 @@
 mod commands;
-mod db;
-mod enhance;
-mod histogram;
+mod engine;
 mod models;
 
+use std::sync::Mutex;
 use tauri::Manager;
+
+use engine::Engine;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -13,7 +14,15 @@ pub fn run() {
         .setup(|app| {
             let dir = app.path().app_data_dir().map_err(|e| e.to_string())?;
             std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
-            app.manage(commands::Db(dir));
+            let port: u16 = std::env::var("VISCV_PORT")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(engine::DEFAULT_PORT);
+            let mut engine = Engine::new(dir, port);
+            if let Err(e) = engine.start() {
+                eprintln!("[viscv] 图像引擎启动失败：{}", e);
+            }
+            app.manage(Mutex::new(engine));
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
