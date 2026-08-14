@@ -15,6 +15,8 @@ import numpy as np
 STEP_TYPES = {
     "brightness", "contrast", "gamma", "histogram_eq", "clahe", "grayscale",
     "gaussian_blur", "median_blur", "sharpen", "threshold", "canny", "denoise",
+    "saturation", "white_balance", "invert", "sepia", "posterize",
+    "box_blur", "bilateral", "morphology", "adaptive_threshold", "laplacian", "sobel", "flip",
 }
 
 
@@ -31,6 +33,11 @@ def _pb(step: Dict[str, Any], name: str, default: bool) -> bool:
     params = step.get("params") or {}
     v = params.get(name, default)
     return bool(v)
+
+
+def _ps(step: Dict[str, Any], name: str, default: str) -> str:
+    params = step.get("params") or {}
+    return str(params.get(name, default))
 
 
 def _clip8(arr: np.ndarray) -> np.ndarray:
@@ -164,6 +171,111 @@ def _denoise(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
     return cv2.medianBlur(img, k)
 
 
+
+
+# ---------- 新增算子 ----------
+
+
+def _saturation(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
+    factor = _p(step, "value", 100.0) / 100.0
+    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV).astype(np.float32)
+    hsv[:, :, 1] = np.clip(hsv[:, :, 1] * factor, 0, 255)
+    return cv2.cvtColor(_clip8(hsv).astype(np.uint8), cv2.COLOR_HSV2BGR)
+
+
+def _white_balance(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
+    means = img.reshape(-1, 3).mean(axis=0)  # [B, G, R]
+    target = means.mean()
+    if target <= 1e-3:
+        return img
+    gain = np.clip(target / np.maximum(means, 1e-6), 0.3, 3.0)
+    return _clip8(img.astype(np.float32) * gain[None, None, :])
+
+
+def _invert(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
+    return cv2.bitwise_not(img)
+
+
+def _sepia(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
+    alpha = float(np.clip(_p(step, "strength", 100.0), 0, 100)) / 100.0
+    # 标准 sepia 矩阵，映射 [B,G,R] -> [B',G',R']
+    k = np.array([[0.131, 0.534, 0.272],
+                  [0.168, 0.686, 0.349],
+                  [0.189, 0.769, 0.393]], dtype=np.float32)
+    sepia = _clip8(img.astype(np.float32) @ k.T)
+    return _clip8(alpha * sepia.astype(np.float32) + (1 - alpha) * img.astype(np.float32))
+
+
+def _posterize(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
+    levels = int(np.clip(_p(step, "levels", 4.0), 2, 16))
+    step_v = 256.0 / levels
+    return (np.floor(img.astype(np.float32) / step_v) * step_v).astype(np.uint8)
+
+
+def _box_blur(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
+    k = int(np.clip(_p(step, "kernel", 5.0), 1, 31))
+    if k % 2 == 0:
+        k += 1
+    return cv2.blur(img, (k, k))
+
+
+def _bilateral(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
+    d = int(max(_p(step, "d", 5.0), 1))
+    sc = float(_p(step, "sigma_color", 75.0))
+    ss = float(_p(step, "sigma_space", 75.0))
+    return cv2.bilateralFilter(img, d, sc, ss)
+
+
+def _morphology(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
+    op_map = {"erode": cv2.MORPH_ERODE, "dilate": cv2.MORPH_DILATE,
+              "open": cv2.MORPH_OPEN, "close": cv2.MORPH_CLOSE}
+    op = op_map.get(_ps(step, "op", "erode"), cv2.MORPH_ERODE)
+    k = int(np.clip(_p(step, "kernel", 3.0), 1, 15))
+    if k % 2 == 0:
+        k += 1
+    iters = int(np.clip(_p(step, "iterations", 1.0), 1, 10))
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (k, k))
+    return cv2.morphologyEx(img, op, kernel, iterations=iters)
+
+
+def _adaptive_threshold(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    block = int(np.clip(_p(step, "block", 11.0), 3, 51))
+    if block % 2 == 0:
+        block += 1
+    c = float(_p(step, "c", 2.0))
+    method = cv2.ADAPTIVE_THRESH_GAUSSIAN_C if _ps(step, "method", "mean") == "gaussian" else cv2.ADAPTIVE_THRESH_MEAN_C
+    th_type = cv2.THRESH_BINARY_INV if _pb(step, "invert", False) else cv2.THRESH_BINARY
+    bin_img = cv2.adaptiveThreshold(gray, 255, method, th_type, block, c)
+    return _stack3(bin_img)
+
+
+def _laplacian(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    ksize = int(np.clip(_p(step, "ksize", 3.0), 1, 15))
+    if ksize % 2 == 0:
+        ksize += 1
+    lap = cv2.Laplacian(gray, cv2.CV_32F, ksize=ksize)
+    return _stack3(cv2.convertScaleAbs(lap))
+
+
+def _sobel(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    ksize = int(np.clip(_p(step, "ksize", 3.0), 1, 15))
+    if ksize % 2 == 0:
+        ksize += 1
+    axis = _ps(step, "axis", "x")
+    dx, dy = (1, 0) if axis == "x" else (0, 1)
+    s = cv2.Sobel(gray, cv2.CV_32F, dx, dy, ksize=ksize)
+    return _stack3(cv2.convertScaleAbs(s))
+
+
+def _flip(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
+    mode_map = {"horizontal": 1, "vertical": 0, "both": -1}
+    mode = mode_map.get(_ps(step, "mode", "horizontal"), 1)
+    return cv2.flip(img, mode)
+
+
 OPS = {
     "brightness": _brightness,
     "contrast": _contrast,
@@ -177,6 +289,18 @@ OPS = {
     "threshold": _threshold,
     "canny": _canny,
     "denoise": _denoise,
+    "saturation": _saturation,
+    "white_balance": _white_balance,
+    "invert": _invert,
+    "sepia": _sepia,
+    "posterize": _posterize,
+    "box_blur": _box_blur,
+    "bilateral": _bilateral,
+    "morphology": _morphology,
+    "adaptive_threshold": _adaptive_threshold,
+    "laplacian": _laplacian,
+    "sobel": _sobel,
+    "flip": _flip,
 }
 
 

@@ -118,3 +118,48 @@ def test_png_roundtrip_no_channel_swap():
     h = processing.histogram_bins(bgr)
     assert h["red"][30] == 4 and h["green"][20] == 4 and h["blue"][10] == 4
     assert h["red"][10] == 0 and h["blue"][30] == 0
+
+
+def test_invert_flips_values():
+    out = processing.apply_step(flat(30), step("invert"))
+    assert out[0, 0, 0] == 225
+
+
+def test_white_balance_equalizes_means():
+    img = np.zeros((8, 8, 3), dtype=np.uint8)
+    img[:, :, 0] = 50  # B
+    img[:, :, 1] = 100  # G
+    img[:, :, 2] = 150  # R
+    out = processing.apply_step(img, step("white_balance"))
+    m = out.reshape(-1, 3).mean(axis=0)
+    assert abs(m[0] - m[2]) < 6
+
+
+def test_posterize_limits_levels():
+    ramp = np.tile(np.arange(256, dtype=np.uint8)[:, None, None], (1, 1, 3))
+    out = processing.apply_step(ramp, step("posterize", levels=4))
+    vals = np.unique(out)
+    assert len(vals) <= 4
+
+
+def test_flip_horizontal_mirrors():
+    img = np.zeros((2, 4, 3), dtype=np.uint8)
+    img[0, 0] = 200
+    out = processing.apply_step(img, step("flip", mode="horizontal"))
+    assert out[0, 3, 0] == 200
+
+
+def test_adaptive_threshold_binary():
+    import cv2
+
+    img = np.zeros((16, 16, 3), dtype=np.uint8)
+    img[4:12, 4:12] = 180
+    out = processing.apply_step(img, step("adaptive_threshold", block=7, c=2, method="mean", invert=False))
+    assert set(np.unique(out).tolist()) <= {0, 255}
+
+
+def test_new_ops_are_registered():
+    for t in ("saturation", "white_balance", "invert", "sepia", "posterize",
+              "box_blur", "bilateral", "morphology", "adaptive_threshold",
+              "laplacian", "sobel", "flip"):
+        assert t in processing.OPS

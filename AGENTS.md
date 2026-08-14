@@ -17,7 +17,7 @@ ViSCV 是一个基于 Tauri 2 的图像增强可视化桌面应用。架构为�
   - `commands.rs` — Tauri 命令（load/process/export、项目/预设/笔记 CRUD、设置、check_update），全部转发给引擎。
   - `models.rs` — 命令参数与返回值的序列化模型。
 - `viscv_server/` — Python 引擎。
-  - `processing.py` — OpenCV 实现 12 个算子 + 累积管线 + 直方图 + PNG/base64 编码。
+  - `processing.py` — OpenCV 实现整类图像增强算子（颜色/滤波/边缘/阈值/形态/翻转等） + 累积管线 + 直方图 + PNG/base64 编码；新增算子只需在此注册并在 `src/lib/enhancements.ts` 补 UI 规格。
   - `storage.py` — sqlite3（projects/presets/notes/settings，JSON 落库）。
   - `updater.py` — 基于标准库的版本检查。
   - `server.py` — 极简 JSON-RPC 服务（`/rpc` POST + `/health`），仅用 http.server。

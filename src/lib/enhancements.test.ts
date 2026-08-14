@@ -3,12 +3,15 @@ import { ENHANCEMENTS, createStep, defaultParams, specFor } from "./enhancements
 
 describe("enhancement catalog", () => {
   it("contains the full core set of operations", () => {
-    const types = ENHANCEMENTS.map((e) => e.type).sort();
-    expect(types).toEqual([
+    const expected = [
       "brightness", "canny", "clahe", "contrast", "denoise", "gamma",
       "gaussian_blur", "grayscale", "histogram_eq", "median_blur",
       "sharpen", "threshold",
-    ].sort());
+      "saturation", "white_balance", "invert", "sepia", "posterize",
+      "box_blur", "bilateral", "morphology", "adaptive_threshold",
+      "laplacian", "sobel", "flip",
+    ];
+    expect(ENHANCEMENTS.map((e) => e.type).sort()).toEqual(expected.sort());
   });
 
   it("provides defaults per operation", () => {

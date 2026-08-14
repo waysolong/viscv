@@ -129,6 +129,70 @@ const S: Record<EnhancementType, EnhancementSpec> = {
       { name: "strength", label: "强度", kind: "number", min: 1, max: 7, step: 1, default: 3 },
     ],
   },
+  saturation: {
+    type: "saturation", label: "色彩饱和度", description: "增强或降低色彩鲜艳度（HSV 饱和度）。", group: "颜色",
+    params: [ { name: "value", label: "饱和度", kind: "number", min: 0, max: 300, step: 5, default: 100 } ],
+  },
+  white_balance: {
+    type: "white_balance", label: "自动白平衡", description: "灰度世界法校准通道均值，校正色偏。", group: "颜色",
+    params: [],
+  },
+  invert: {
+    type: "invert", label: "反相", description: "取反所有像素颜色（负片效果）。", group: "颜色",
+    params: [],
+  },
+  sepia: {
+    type: "sepia", label: "复古色调", description: "叠加经典 sepia 暖色调。", group: "颜色",
+    params: [ { name: "strength", label: "强度", kind: "number", min: 0, max: 100, step: 1, default: 100 } ],
+  },
+  posterize: {
+    type: "posterize", label: "色调分离", description: "把连续色调聚合成少量层级。", group: "颜色",
+    params: [ { name: "levels", label: "层级", kind: "number", min: 2, max: 16, step: 1, default: 4 } ],
+  },
+  box_blur: {
+    type: "box_blur", label: "盒式模糊", description: "均值核平滑图像。", group: "滤波",
+    params: [ { name: "kernel", label: "核大小", kind: "number", min: 1, max: 31, step: 1, default: 5 } ],
+  },
+  bilateral: {
+    type: "bilateral", label: "双边滤波", description: "保边降噪，平滑同时保留边缘。", group: "滤波",
+    params: [
+      { name: "d", label: "直径", kind: "number", min: 1, max: 15, step: 1, default: 5 },
+      { name: "sigma_color", label: "颜色差", kind: "number", min: 1, max: 200, step: 1, default: 75 },
+      { name: "sigma_space", label: "空间差", kind: "number", min: 1, max: 200, step: 1, default: 75 },
+    ],
+  },
+  morphology: {
+    type: "morphology", label: "形态学运算", description: "腐蚀/膨胀/开/闭运算。", group: "形态",
+    params: [
+      { name: "op", label: "运算", kind: "select", default: "erode", options: [ { label: "腐蚀", value: "erode" }, { label: "膨胀", value: "dilate" }, { label: "开运算", value: "open" }, { label: "闭运算", value: "close" } ] },
+      { name: "kernel", label: "核大小", kind: "number", min: 1, max: 15, step: 1, default: 3 },
+      { name: "iterations", label: "迭代次数", kind: "number", min: 1, max: 10, step: 1, default: 1 },
+    ],
+  },
+  adaptive_threshold: {
+    type: "adaptive_threshold", label: "自适应阈值", description: "按局部邻域自适应二值化，抗光照不均。", group: "分割",
+    params: [
+      { name: "method", label: "方法", kind: "select", default: "mean", options: [ { label: "均值", value: "mean" }, { label: "高斯", value: "gaussian" } ] },
+      { name: "block", label: "邻域大小", kind: "number", min: 3, max: 51, step: 2, default: 11 },
+      { name: "c", label: "常数 C", kind: "number", min: -30, max: 30, step: 1, default: 2 },
+      { name: "invert", label: "反相", kind: "boolean", default: false },
+    ],
+  },
+  laplacian: {
+    type: "laplacian", label: "拉普拉斯边缘", description: "二阶导数边缘检测（拉普拉斯算子）。", group: "边缘",
+    params: [ { name: "ksize", label: "核大小", kind: "number", min: 1, max: 15, step: 2, default: 3 } ],
+  },
+  sobel: {
+    type: "sobel", label: "Sobel 边缘", description: "一阶方向导数边缘检测。", group: "边缘",
+    params: [
+      { name: "axis", label: "方向", kind: "select", default: "x", options: [ { label: "水平 X", value: "x" }, { label: "垂直 Y", value: "y" } ] },
+      { name: "ksize", label: "核大小", kind: "number", min: 1, max: 15, step: 2, default: 3 },
+    ],
+  },
+  flip: {
+    type: "flip", label: "翻转", description: "水平/垂直/双向翻转图像。", group: "变换",
+    params: [ { name: "mode", label: "方式", kind: "select", default: "horizontal", options: [ { label: "水平", value: "horizontal" }, { label: "垂直", value: "vertical" }, { label: "双向", value: "both" } ] } ],
+  },
 };
 
 export const ENHANCEMENTS: EnhancementSpec[] = Object.values(S);

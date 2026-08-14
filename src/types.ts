@@ -10,7 +10,19 @@ export type EnhancementType =
   | "sharpen"
   | "threshold"
   | "canny"
-  | "denoise";
+  | "denoise"
+  | "saturation"
+  | "white_balance"
+  | "invert"
+  | "sepia"
+  | "posterize"
+  | "box_blur"
+  | "bilateral"
+  | "morphology"
+  | "adaptive_threshold"
+  | "laplacian"
+  | "sobel"
+  | "flip";
 
 export type ParamValue = number | string | boolean;
 
