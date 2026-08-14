@@ -1,0 +1,10 @@
+node_modules
+dist
+*.local
+.vite
+src-tauri/target
+src-tauri/gen
+
+# 本地运行辅助/日志，不入库
+work
+*.tsbuildinfo
