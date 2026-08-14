@@ -60,7 +60,7 @@ export default function Workspace() {
         if (cancelled || useEditor.getState().originalPath) return;
         const info = await backend.loadImage(path);
         if (!cancelled) useEditor.getState().setOriginal(path, info);
-      } catch { /* 默认示例图加载失败则保持空状态 */ }
+      } catch (e) { console.error("[viscv] 默认示例图加载失败", e); msg.error("默认示例图加载失败：" + String(e)); }
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
