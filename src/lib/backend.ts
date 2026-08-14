@@ -20,6 +20,7 @@ export async function pickSavePath(defaultName: string): Promise<string | null> 
 
 // 图像处理相关调用失败时直接抛错，由调用方捕获并展示，避免静默失败。
 export const loadImage = (path: string): Promise<ImageInfo> => invoke("load_image", { path });
+export const defaultImagePath = (): Promise<string> => invoke("default_image_path");
 export const processPipeline = (path: string, steps: ProcessingStep[]): Promise<ImageInfo> =>
   invoke("process_pipeline", { path, steps });
 export const exportImage = (path: string, steps: ProcessingStep[], outPath: string): Promise<boolean> =>

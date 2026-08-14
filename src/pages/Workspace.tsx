@@ -49,6 +49,23 @@ export default function Workspace() {
     return () => { if (timer.current) clearTimeout(timer.current); };
   }, [recompute]);
 
+  // 启动时默认打开内置示例图（若尚未加载图像）
+  useEffect(() => {
+    if (!backend.isTauri()) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        if (useEditor.getState().originalPath) return;
+        const path = await backend.defaultImagePath();
+        if (cancelled || useEditor.getState().originalPath) return;
+        const info = await backend.loadImage(path);
+        if (!cancelled) useEditor.getState().setOriginal(path, info);
+      } catch { /* 默认示例图加载失败则保持空状态 */ }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const onLoad = async (path: string) => {
     try {
       const info = await backend.loadImage(path);

@@ -18,6 +18,7 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "resources": ["resources/lenna.png"],
     "externalBin": ["binaries/viscv-engine"],
     "icon": [
       "icons/32x32.png",

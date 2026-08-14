@@ -26,6 +26,7 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            commands::default_image_path,
             commands::load_image,
             commands::process_pipeline,
             commands::export_image,

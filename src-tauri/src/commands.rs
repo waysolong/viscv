@@ -1,7 +1,7 @@
 //! Tauri 命令层：把前端的 invoke 原样转发给 Python(OpenCV) sidecar，保持接口与返回值形状不变。
 use serde_json::{json, Value};
 use std::sync::Mutex;
-use tauri::State;
+use tauri::{AppHandle, Manager, State};
 
 use crate::engine::Engine;
 use crate::models::{AppSettings, ImageInfo, Note, Preset, Project, Step, UpdateInfo};
@@ -13,6 +13,22 @@ fn forward<T: serde::de::DeserializeOwned>(
 ) -> Result<T, String> {
     let data = engine.rpc(command, args)?;
     serde_json::from_value(data).map_err(|e| format!("引擎返回结构不符: {e}"))
+}
+
+/// 返回内置示例图路径（dev 用源码目录，打包后用 Tauri 资源目录）。
+#[tauri::command]
+pub fn default_image_path(app: AppHandle) -> Result<String, String> {
+    let manifest = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("resources/lenna.png");
+    if manifest.exists() {
+        return Ok(manifest.to_string_lossy().to_string());
+    }
+    let dir = app.path().resource_dir().map_err(|e| e.to_string())?;
+    for c in [dir.join("lenna.png"), dir.join("resources/lenna.png")] {
+        if c.exists() {
+            return Ok(c.to_string_lossy().to_string());
+        }
+    }
+    Err("找不到内置示例图 lenna.png".to_string())
 }
 
 // ---------- 图像 ----------
