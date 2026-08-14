@@ -100,3 +100,21 @@ def test_decode_supported_formats(tmp_path):
         p.write_bytes(cv2.imencode(fmt, flat(80, 6, 6))[1].tobytes())
         info = processing.load_image(str(p))
         assert info["width"] == 6
+
+
+def test_png_roundtrip_no_channel_swap():
+    import base64 as b64
+    import cv2
+
+    bgr = np.zeros((2, 2, 3), dtype=np.uint8)
+    bgr[:, :, 0] = 10  # B
+    bgr[:, :, 1] = 20  # G
+    bgr[:, :, 2] = 30  # R
+    url = processing.encode_png(bgr)
+    buf = np.frombuffer(b64.b64decode(url.split(",", 1)[1]), dtype=np.uint8)
+    back = cv2.imdecode(buf, cv2.IMREAD_COLOR)
+    assert (back == bgr).all(), "PNG 往返出现 BGR/RGB 通道交换"
+
+    h = processing.histogram_bins(bgr)
+    assert h["red"][30] == 4 and h["green"][20] == 4 and h["blue"][10] == 4
+    assert h["red"][10] == 0 and h["blue"][30] == 0

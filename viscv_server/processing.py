@@ -1,12 +1,13 @@
 """基于 OpenCV 的图像增强引擎：12 个算子 + 累积可排序管线 + 直方图 + 编码。
 
-所有图像在内部统一为 RGB (H,W,3) uint8；编码时按通道顺序写 PNG，
-保证浏览器中显示的颜色与原始一致。
+图像内部统一用 OpenCV 原生 BGR (H,W,3) uint8：cv2.imread 解码即为 BGR，
+cv2.imencode/imwrite 也按 BGR 解释，因此编码/导出不产生通道交换。
+直方图的 R/G/B 通道索引按 BGR 布局取 [2]/[1]/[0]。
 """
 from __future__ import annotations
 
 import base64
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import cv2
 import numpy as np
@@ -18,7 +19,6 @@ STEP_TYPES = {
 
 
 def _p(step: Dict[str, Any], name: str, default: float):
-    """读取步骤参数，缺失/类型不符时回退到默认值。"""
     params = step.get("params") or {}
     v = params.get(name, default)
     try:
@@ -44,28 +44,29 @@ def _stack3(gray: np.ndarray) -> np.ndarray:
 # ---------- 读取 / 编码 ----------
 
 def read_img(path: str) -> np.ndarray:
-    """读取图像并转为 RGB (H,W,3)。"""
+    """读取图像并转为 BGR (H,W,3)（OpenCV 原生布局）。"""
     data = np.fromfile(path, dtype=np.uint8)
     img = cv2.imdecode(data, cv2.IMREAD_UNCHANGED)
     if img is None:
         raise RuntimeError(f"无法打开图像：{path}")
     if img.ndim == 2:
-        return cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+        return cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
     if img.shape[2] == 4:
-        return cv2.cvtColor(img, cv2.COLOR_BGRA2RGB)
+        return cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
     if img.shape[2] == 3:
-        return cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        return img  # 已为 BGR
     raise RuntimeError(f"不支持的通道数：{path}")
 
 
 def encode_png(img: np.ndarray) -> str:
+    """按 BGR 编码 PNG，保证浏览器（RGB 解释）显示的颜色正确。"""
     ok, buf = cv2.imencode(".png", img)
     if not ok:
         raise RuntimeError("PNG 编码失败")
     return "data:image/png;base64," + base64.b64encode(buf.tobytes()).decode("ascii")
 
 
-# ---------- 算子 ----------
+# ---------- 算子（在 BGR 上计算） ----------
 
 def _brightness(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
     delta = (_p(step, "value", 20.0) / 100.0) * 255.0
@@ -80,14 +81,14 @@ def _contrast(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
 
 def _gamma(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
     gamma = (_p(step, "value", 100.0) / 100.0) ** (-1)
-    gamma = float(np.clip(gamma, 0.02, 10.0))
+    gamma = float(np.clip(gamma, 0.02, 12.0))
     lut = ((np.arange(256, dtype=np.float32) / 255.0) ** gamma * 255.0)
     lut = _clip8(lut).astype(np.uint8)
     return lut[img]
 
 
 def _grayscale(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
-    gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     return _stack3(gray)
 
 
@@ -99,7 +100,7 @@ def _histogram_eq(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
 
 
 def _clahe(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
-    gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     clip = float(_p(step, "clip_limit", 20.0)) / 10.0
     tiles = int(np.clip(_p(step, "tiles", 8.0), 2, 16))
     clahe = cv2.createCLAHE(clipLimit=clip, tileGridSize=(tiles, tiles))
@@ -133,7 +134,7 @@ def _sharpen(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
 
 
 def _threshold(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
-    gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     value = float(_p(step, "value", 128.0))
     otsu = _pb(step, "otsu", True)
     invert = _pb(step, "invert", False)
@@ -148,7 +149,7 @@ def _threshold(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
 
 
 def _canny(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
-    gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     low = float(_p(step, "low", 50.0))
     high = float(_p(step, "high", 150.0))
     edges = cv2.Canny(gray, low, high)
@@ -197,12 +198,13 @@ def run_pipeline(img: np.ndarray, steps: List[Dict[str, Any]]) -> np.ndarray:
 
 
 def histogram_bins(img: np.ndarray) -> Dict[str, List[int]]:
-    gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+    """按 BGR 布局取通道：索引0=B,1=G,2=R。"""
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     return {
         "gray": np.bincount(gray.ravel(), minlength=256).tolist(),
-        "red": np.bincount(img[:, :, 0].ravel(), minlength=256).tolist(),
+        "red": np.bincount(img[:, :, 2].ravel(), minlength=256).tolist(),
         "green": np.bincount(img[:, :, 1].ravel(), minlength=256).tolist(),
-        "blue": np.bincount(img[:, :, 2].ravel(), minlength=256).tolist(),
+        "blue": np.bincount(img[:, :, 0].ravel(), minlength=256).tolist(),
     }
 
 
