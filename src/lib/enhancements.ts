@@ -301,6 +301,30 @@ const S: Record<EnhancementType, EnhancementSpec> = {
       { name: "fill", label: "填充值", kind: "number", min: 0, max: 255, step: 1, default: 128 },
     ],
   },
+  jpeg_compress: {
+    type: "jpeg_compress", label: "JPEG 压缩", description: "按质量做 JPEG 编解码，制造压缩伪影（ImageCompression）。", group: "图像增强",
+    params: [ { name: "quality", label: "质量", kind: "number", min: 1, max: 100, step: 1, default: 50 } ],
+  },
+  letterbox: {
+    type: "letterbox", label: "LetterBox 填充", description: "等比例缩放并按灰边填充成正方形（LetterBox）。", group: "图像增强",
+    params: [ { name: "size", label: "边长%", kind: "number", min: 50, max: 150, step: 5, default: 100 } ],
+  },
+  center_crop: {
+    type: "center_crop", label: "中心裁剪", description: "取中央最大方块裁剪（CenterCrop）。", group: "图像增强",
+    params: [ { name: "keep", label: "保留%", kind: "number", min: 10, max: 100, step: 5, default: 70 } ],
+  },
+  random_crop: {
+    type: "random_crop", label: "随机裁剪", description: "随机位置裁剪方块（固定种子，预览稳定）。", group: "图像增强",
+    params: [ { name: "keep", label: "保留%", kind: "number", min: 10, max: 100, step: 5, default: 70 } ],
+  },
+  solarize: {
+    type: "solarize", label: "太阳化", description: "高于阈值的像素反相（Solarize）。", group: "图像增强",
+    params: [ { name: "threshold", label: "阈值", kind: "number", min: 0, max: 255, step: 1, default: 128 } ],
+  },
+  salt_pepper: {
+    type: "salt_pepper", label: "椒盐噪声", description: "随机点置黑白（S&P，固定种子）。", group: "图像增强",
+    params: [ { name: "amount", label: "密度%", kind: "number", min: 0, max: 30, step: 1, default: 5 } ],
+  },
 };
 
 export const ENHANCEMENTS: EnhancementSpec[] = Object.values(S);

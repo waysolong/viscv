@@ -245,3 +245,41 @@ def test_ultra_perspective_translate_shifts_image():
     img[5:25, 10:40] = 200
     out = processing.apply_step(img, step("ultra_perspective", rotation=0, translate=30, scale=100, shear=0, perspective=0))
     assert not (out == img).all()
+
+
+def test_more_aug_ops_registered():
+    for t in ("jpeg_compress", "letterbox", "center_crop", "random_crop", "solarize", "salt_pepper"):
+        assert t in processing.OPS
+
+
+def test_solarize_inverts_above_threshold():
+    img = np.full((8, 8, 3), 200, np.uint8)
+    out = processing.apply_step(img, step("solarize", threshold=128))
+    assert (out == 55).all()  # 255-200
+
+
+def test_salt_pepper_keeps_binary_extremes_only_with_seed():
+    img = np.full((40, 40, 3), 128, np.uint8)
+    out = processing.apply_step(img, step("salt_pepper", amount=10))
+    vals = set(np.unique(out).tolist())
+    assert vals <= {0, 128, 255}
+
+
+def test_letterbox_square_and_filled():
+    img = np.zeros((20, 40, 3), np.uint8)
+    out = processing.apply_step(img, step("letterbox", size=100))
+    h, w = out.shape[:2]
+    assert h == w == 40
+
+
+def test_center_crop_square_smaller():
+    img = np.random.randint(0, 255, (30, 50, 3), np.uint8)
+    out = processing.apply_step(img, step("center_crop", keep=60))
+    assert out.shape[0] == out.shape[1] and out.shape[0] == int(30 * 0.6)
+
+
+def test_random_crop_stable_with_seed():
+    img = np.random.randint(0, 255, (30, 50, 3), np.uint8)
+    o1 = processing.apply_step(img, step("random_crop", keep=60))
+    o2 = processing.apply_step(img, step("random_crop", keep=60))
+    assert o1.shape == o2.shape and (o1 == o2).all()

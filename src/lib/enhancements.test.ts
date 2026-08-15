@@ -12,6 +12,7 @@ describe("enhancement catalog", () => {
       "laplacian", "sobel", "flip",
       "ultra_hsv", "ultra_perspective", "ultra_erase", "gaussian_noise", "bgr_swap",
       "mosaic", "mixup", "cutmix", "cutout",
+      "jpeg_compress", "letterbox", "center_crop", "random_crop", "solarize", "salt_pepper",
     ];
     expect(ENHANCEMENTS.map((e) => e.type).sort()).toEqual(expected.sort());
   });

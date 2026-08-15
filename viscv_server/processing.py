@@ -19,6 +19,7 @@ STEP_TYPES = {
     "box_blur", "bilateral", "morphology", "adaptive_threshold", "laplacian", "sobel", "flip",
     "ultra_hsv", "ultra_perspective", "ultra_erase", "gaussian_noise", "bgr_swap",
     "mosaic", "mixup", "cutmix", "cutout",
+    "jpeg_compress", "letterbox", "center_crop", "random_crop", "solarize", "salt_pepper",
 }
 
 
@@ -400,6 +401,75 @@ def _cutout(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
     return _ultra_erase(img, step)
 
 
+
+
+# ---------- 图像增强（其余单图项：压缩/填充/裁剪/太阳化/椒盐） ----------
+
+def _jpeg_compress(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
+    """ImageCompression：按质量做 JPEG 编解码，制造压缩伪影。"""
+    q = int(np.clip(_p(step, "quality", 50.0), 1, 100))
+    ok, buf = cv2.imencode(".jpg", img, [int(cv2.IMWRITE_JPEG_QUALITY), q])
+    if not ok:
+        return img
+    return cv2.imdecode(buf, cv2.IMREAD_COLOR)
+
+
+def _letterbox(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
+    """LetterBox：等比例缩放并灰边填充成正方形。"""
+    h, w = img.shape[:2]
+    pct = float(_p(step, "size", 100.0)) / 100.0
+    target = max(int(max(h, w) * pct), 1)
+    r = target / max(h, w)
+    nh = max(1, int(round(h * r)))
+    nw = max(1, int(round(w * r)))
+    resized = cv2.resize(img, (nw, nh), interpolation=cv2.INTER_LINEAR)
+    canvas = np.full((target, target, 3), 114, np.uint8)
+    top = (target - nh) // 2
+    left = (target - nw) // 2
+    canvas[top:top + nh, left:left + nw] = resized
+    return canvas
+
+
+def _center_crop(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
+    h, w = img.shape[:2]
+    keep = float(np.clip(_p(step, "keep", 70.0), 10, 100)) / 100.0
+    side = max(1, int(min(h, w) * keep))
+    top = (h - side) // 2
+    left = (w - side) // 2
+    return img[top:top + side, left:left + side]
+
+
+def _random_crop(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
+    h, w = img.shape[:2]
+    keep = float(np.clip(_p(step, "keep", 70.0), 10, 100)) / 100.0
+    side = max(1, int(min(h, w) * keep))
+    rng = np.random.default_rng(0)
+    top = int(rng.integers(0, max(1, h - side + 1)))
+    left = int(rng.integers(0, max(1, w - side + 1)))
+    return img[top:top + side, left:left + side]
+
+
+def _solarize(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
+    th = int(np.clip(_p(step, "threshold", 128.0), 0, 255))
+    out = img.copy()
+    mask = img > th
+    out[mask] = 255 - img[mask]
+    return out
+
+
+def _salt_pepper(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
+    amount = float(np.clip(_p(step, "amount", 5.0), 0, 30)) / 100.0
+    rng = np.random.default_rng(0)
+    mask = rng.random(img.shape[:2]) < amount
+    black = rng.random(img.shape[:2]) < 0.5
+    out = img.copy()
+    for c in range(3):
+        ch = out[:, :, c]
+        ch[mask & black] = 0
+        ch[mask & ~black] = 255
+    return out
+
+
 OPS = {
     "brightness": _brightness,
     "contrast": _contrast,
@@ -434,6 +504,12 @@ OPS = {
     "mixup": _mixup,
     "cutmix": _cutmix,
     "cutout": _cutout,
+    "jpeg_compress": _jpeg_compress,
+    "letterbox": _letterbox,
+    "center_crop": _center_crop,
+    "random_crop": _random_crop,
+    "solarize": _solarize,
+    "salt_pepper": _salt_pepper,
 }
 
 

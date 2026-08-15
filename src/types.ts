@@ -31,7 +31,13 @@ export type EnhancementType =
   | "mosaic"
   | "mixup"
   | "cutmix"
-  | "cutout";
+  | "cutout"
+  | "jpeg_compress"
+  | "letterbox"
+  | "center_crop"
+  | "random_crop"
+  | "solarize"
+  | "salt_pepper";
 
 export type ParamValue = number | string | boolean;
 
