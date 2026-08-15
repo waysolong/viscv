@@ -118,8 +118,8 @@ export default function StepList({
                   const t = e.target as HTMLElement;
                   if (t.closest("button") || t.closest(".ant-switch") || t.closest("input")) return;
                   const now = Date.now();
-                  // 只有快速双击（距上次松开 < 450ms）的第二次按下才启动拖拽
-                  if (now - lastUpRef.current < 450) {
+                  // 只有快速双击（距上次松开 < 300ms）的第二次按下才启动拖拽
+                  if (now - lastUpRef.current < 300) {
                     e.preventDefault();
                     suppressClickRef.current = true;
                     dragRef.current = { id: step.id, startY: e.clientY, curX: e.clientX, curY: e.clientY };
