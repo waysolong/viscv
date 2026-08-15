@@ -305,7 +305,7 @@ def _ultra_hsv(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
 def _ultra_perspective(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
     h, w = img.shape[:2]
     degrees = float(_p(step, "rotation", 0.0))
-    translate = float(_p(step, "translate", 0.0)) / 100.0
+    tx = float(_p(step, "translate", 0.0)) / 100.0
     scale = float(_p(step, "scale", 100.0)) / 100.0
     shear = float(_p(step, "shear", 0.0))
     perspective = float(_p(step, "perspective", 0.0)) / 1e6
@@ -321,8 +321,9 @@ def _ultra_perspective(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
     S[0, 1] = np.tan(np.deg2rad(shear))
     S[1, 0] = np.tan(np.deg2rad(shear))
     T = np.eye(3, dtype=np.float32)
-    T[0, 2] = translate * w
-    T[1, 2] = translate * h
+    # 0.5 为居中基准（同 ultralytics），translate 0 => 图像居中不变
+    T[0, 2] = (0.5 + tx) * w
+    T[1, 2] = (0.5 + tx) * h
     M = T @ S @ R @ P @ C  # 与 ultralytics RandomPerspective 同顺序
     return cv2.warpPerspective(img, M, (w, h), borderValue=0, flags=cv2.INTER_LINEAR)
 

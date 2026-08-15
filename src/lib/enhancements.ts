@@ -54,7 +54,7 @@ export const PARAM_HINTS: Record<string, string> = {
   "ultra_hsv:saturation": "饱和度百分比：100=不变，>100 更鲜艳、<100 变灰。",
   "ultra_hsv:brightness": "明度百分比：100=不变。",
   "ultra_perspective:rotation": "顺时针旋转角度（度）。",
-  "ultra_perspective:translate": "水平/垂直平移量（占图像尺寸的百分比）。",
+  "ultra_perspective:translate": "平移距离百分比：0=原位（居中），正值向右/下，负值向左/上。",
   "ultra_perspective:scale": "缩放百分比：100=原尺寸。",
   "ultra_perspective:shear": "错切角度（度）。",
   "ultra_perspective:perspective": "透视畸变强度（越大越像 3D 侧视）。",
@@ -261,7 +261,7 @@ const S: Record<EnhancementType, EnhancementSpec> = {
     type: "ultra_perspective", label: "几何变换", description: "旋转/平移/缩放/错切/透视（Ultralytics RandomPerspective 确定性版）。", group: "图像增强",
     params: [
       { name: "rotation", label: "旋转°", kind: "number", min: 0, max: 180, step: 1, default: 0 },
-      { name: "translate", label: "平移%", kind: "number", min: 0, max: 100, step: 5, default: 0 },
+      { name: "translate", label: "平移%", kind: "number", min: -100, max: 100, step: 5, default: 0 },
       { name: "scale", label: "缩放%", kind: "number", min: 50, max: 200, step: 5, default: 100 },
       { name: "shear", label: "错切°", kind: "number", min: 0, max: 45, step: 1, default: 0 },
       { name: "perspective", label: "透视", kind: "number", min: 0, max: 1000, step: 50, default: 0 },

@@ -232,3 +232,16 @@ def test_cutmix_changes_some_region_with_fixed_seed():
     assert out.shape == img.shape
     out2 = processing.apply_step(img, step("cutmix", area=25))
     assert (out == out2).all()
+
+
+def test_ultra_perspective_translate_zero_is_identity():
+    img = np.random.randint(0, 255, (30, 50, 3), np.uint8)
+    out = processing.apply_step(img, step("ultra_perspective", rotation=0, translate=0, scale=100, shear=0, perspective=0))
+    assert (out == img).all()
+
+
+def test_ultra_perspective_translate_shifts_image():
+    img = np.zeros((30, 50, 3), np.uint8)
+    img[5:25, 10:40] = 200
+    out = processing.apply_step(img, step("ultra_perspective", rotation=0, translate=30, scale=100, shear=0, perspective=0))
+    assert not (out == img).all()
