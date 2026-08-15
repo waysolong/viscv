@@ -17,6 +17,7 @@ STEP_TYPES = {
     "gaussian_blur", "median_blur", "sharpen", "threshold", "canny", "denoise",
     "saturation", "white_balance", "invert", "sepia", "posterize",
     "box_blur", "bilateral", "morphology", "adaptive_threshold", "laplacian", "sobel", "flip",
+    "ultra_hsv", "ultra_perspective", "ultra_erase", "gaussian_noise", "bgr_swap",
 }
 
 
@@ -285,6 +286,73 @@ def _flip(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
     return cv2.flip(img, mode)
 
 
+
+
+# ---------- 图像增强（Ultralytics 风格，单图可交互版本） ----------
+
+def _ultra_hsv(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
+    hue = float(_p(step, "hue", 0.0))
+    sat = float(_p(step, "saturation", 100.0)) / 100.0
+    bri = float(_p(step, "brightness", 100.0)) / 100.0
+    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV).astype(np.float32)
+    hsv[..., 0] = (hsv[..., 0] + hue) % 180
+    hsv[..., 1] = np.clip(hsv[..., 1] * sat, 0, 255)
+    hsv[..., 2] = np.clip(hsv[..., 2] * bri, 0, 255)
+    return cv2.cvtColor(_clip8(hsv).astype(np.uint8), cv2.COLOR_HSV2BGR)
+
+
+def _ultra_perspective(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
+    h, w = img.shape[:2]
+    degrees = float(_p(step, "rotation", 0.0))
+    translate = float(_p(step, "translate", 0.0)) / 100.0
+    scale = float(_p(step, "scale", 100.0)) / 100.0
+    shear = float(_p(step, "shear", 0.0))
+    perspective = float(_p(step, "perspective", 0.0)) / 1e6
+    C = np.eye(3, dtype=np.float32)
+    C[0, 2] = -w / 2
+    C[1, 2] = -h / 2
+    P = np.eye(3, dtype=np.float32)
+    P[2, 0] = perspective
+    P[2, 1] = perspective
+    R = np.eye(3, dtype=np.float32)
+    R[:2] = cv2.getRotationMatrix2D(center=(0, 0), angle=degrees, scale=max(scale, 1e-3))
+    S = np.eye(3, dtype=np.float32)
+    S[0, 1] = np.tan(np.deg2rad(shear))
+    S[1, 0] = np.tan(np.deg2rad(shear))
+    T = np.eye(3, dtype=np.float32)
+    T[0, 2] = translate * w
+    T[1, 2] = translate * h
+    M = T @ S @ R @ P @ C  # 与 ultralytics RandomPerspective 同顺序
+    return cv2.warpPerspective(img, M, (w, h), borderValue=0, flags=cv2.INTER_LINEAR)
+
+
+def _ultra_erase(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
+    h, w = img.shape[:2]
+    area = float(np.clip(_p(step, "area", 20.0), 0, 90)) / 100.0
+    fill = float(_p(step, "fill", 128.0))
+    bw = max(1, int(w * (area ** 0.5)))
+    bh = max(1, int(h * (area ** 0.5)))
+    rng = np.random.default_rng(0)  # 固定种子，保证预览稳定无闪烁
+    jx = int(rng.uniform(-w // 10, w // 10))
+    jy = int(rng.uniform(-h // 10, h // 10))
+    x0 = max(0, (w - bw) // 2 + jx)
+    y0 = max(0, (h - bh) // 2 + jy)
+    out = img.copy()
+    out[y0:min(h, y0 + bh), x0:min(w, x0 + bw)] = fill
+    return out
+
+
+def _gaussian_noise(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
+    sigma = float(_p(step, "sigma", 25.0))
+    rng = np.random.default_rng(0)
+    noise = rng.normal(0, sigma, img.shape).astype(np.float32)
+    return _clip8(img.astype(np.float32) + noise)
+
+
+def _bgr_swap(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
+    return cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+
 OPS = {
     "brightness": _brightness,
     "contrast": _contrast,
@@ -310,6 +378,11 @@ OPS = {
     "laplacian": _laplacian,
     "sobel": _sobel,
     "flip": _flip,
+    "ultra_hsv": _ultra_hsv,
+    "ultra_perspective": _ultra_perspective,
+    "ultra_erase": _ultra_erase,
+    "gaussian_noise": _gaussian_noise,
+    "bgr_swap": _bgr_swap,
 }
 
 

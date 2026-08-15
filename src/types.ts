@@ -22,7 +22,12 @@ export type EnhancementType =
   | "adaptive_threshold"
   | "laplacian"
   | "sobel"
-  | "flip";
+  | "flip"
+  | "ultra_hsv"
+  | "ultra_perspective"
+  | "ultra_erase"
+  | "gaussian_noise"
+  | "bgr_swap";
 
 export type ParamValue = number | string | boolean;
 

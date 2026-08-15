@@ -50,7 +50,17 @@ export const PARAM_HINTS: Record<string, string> = {
   "sobel:axis": "求导方向：X 出水平边缘、Y 出垂直边缘。",
   "sobel:ksize": "Sobel 核大小。",
   "flip:mode": "翻转方向：水平/垂直/双向。",
-};
+  "ultra_hsv:hue": "色相偏移量（0~180，可负），使整图色调偏转。",
+  "ultra_hsv:saturation": "饱和度百分比：100=不变，>100 更鲜艳、<100 变灰。",
+  "ultra_hsv:brightness": "明度百分比：100=不变。",
+  "ultra_perspective:rotation": "顺时针旋转角度（度）。",
+  "ultra_perspective:translate": "水平/垂直平移量（占图像尺寸的百分比）。",
+  "ultra_perspective:scale": "缩放百分比：100=原尺寸。",
+  "ultra_perspective:shear": "错切角度（度）。",
+  "ultra_perspective:perspective": "透视畸变强度（越大越像 3D 侧视）。",
+  "ultra_erase:area": "被擦除区域的面积占比（%）。",
+  "ultra_erase:fill": "被擦除区域填充的灰度值（0=黑，255=白）。",
+  "gaussian_noise:sigma": "高斯噪声标准差，越大噪声越明显。",};
 
 /** 返回某算子的某参数的提示（缺省时可用 spec 上的 hint）。 */
 export const hintFor = (type: string, name: string): string | undefined =>
@@ -238,6 +248,39 @@ const S: Record<EnhancementType, EnhancementSpec> = {
   flip: {
     type: "flip", label: "翻转", description: "水平/垂直/双向翻转图像。", group: "变换",
     params: [ { name: "mode", label: "方式", kind: "select", default: "horizontal", options: [ { label: "水平", value: "horizontal" }, { label: "垂直", value: "vertical" }, { label: "双向", value: "both" } ] } ],
+  },
+  ultra_hsv: {
+    type: "ultra_hsv", label: "HSV 调整", description: "对色调/饱和度/明度整体调整（Ultralytics RandomHSV 的单图确定性版）。", group: "图像增强",
+    params: [
+      { name: "hue", label: "色调", kind: "number", min: -180, max: 180, step: 5, default: 0 },
+      { name: "saturation", label: "饱和度", kind: "number", min: 0, max: 200, step: 5, default: 100 },
+      { name: "brightness", label: "明度", kind: "number", min: 0, max: 200, step: 5, default: 100 },
+    ],
+  },
+  ultra_perspective: {
+    type: "ultra_perspective", label: "几何变换", description: "旋转/平移/缩放/错切/透视（Ultralytics RandomPerspective 确定性版）。", group: "图像增强",
+    params: [
+      { name: "rotation", label: "旋转°", kind: "number", min: 0, max: 180, step: 1, default: 0 },
+      { name: "translate", label: "平移%", kind: "number", min: 0, max: 100, step: 5, default: 0 },
+      { name: "scale", label: "缩放%", kind: "number", min: 50, max: 200, step: 5, default: 100 },
+      { name: "shear", label: "错切°", kind: "number", min: 0, max: 45, step: 1, default: 0 },
+      { name: "perspective", label: "透视", kind: "number", min: 0, max: 1000, step: 50, default: 0 },
+    ],
+  },
+  ultra_erase: {
+    type: "ultra_erase", label: "随机擦除", description: "随机擦除一块区域（Ultralytics RandomErasing 确定性版）。", group: "图像增强",
+    params: [
+      { name: "area", label: "擦除面积%", kind: "number", min: 0, max: 90, step: 5, default: 20 },
+      { name: "fill", label: "填充值", kind: "number", min: 0, max: 255, step: 1, default: 128 },
+    ],
+  },
+  gaussian_noise: {
+    type: "gaussian_noise", label: "高斯噪声", description: "叠加高斯随机噪声（固定种子，预览稳定）。", group: "图像增强",
+    params: [ { name: "sigma", label: "噪声强度", kind: "number", min: 0, max: 200, step: 5, default: 25 } ],
+  },
+  bgr_swap: {
+    type: "bgr_swap", label: "通道交换(BGR)", description: "交换 R/B 通道，模拟通道顺序错误（Ultralytics bgr 增广）。", group: "图像增强",
+    params: [],
   },
 };
 

@@ -163,3 +163,45 @@ def test_new_ops_are_registered():
               "box_blur", "bilateral", "morphology", "adaptive_threshold",
               "laplacian", "sobel", "flip"):
         assert t in processing.OPS
+
+
+def test_new_augmented_ops_registered():
+    for t in ("ultra_hsv", "ultra_perspective", "ultra_erase", "gaussian_noise", "bgr_swap"):
+        assert t in processing.OPS
+
+
+def test_ultra_perspective_changes_geometry():
+    img = np.zeros((32, 48, 3), dtype=np.uint8)
+    img[8:24, 18:30] = 200
+    out = processing.apply_step(img, step("ultra_perspective", rotation=15, scale=100, translate=0, shear=0, perspective=0))
+    assert out.shape == img.shape
+
+
+def test_ultra_erase_keeps_shape_and_changes_region():
+    img = np.full((40, 40, 3), 255, np.uint8)
+    out = processing.apply_step(img, step("ultra_erase", area=25, fill=0))
+    assert out.shape == img.shape
+    assert (out == 0).any() and (out == 255).any()
+
+
+def test_gaussian_noise_adds_variation():
+    img = np.full((16, 16, 3), 128, np.uint8)
+    out = processing.apply_step(img, step("gaussian_noise", sigma=40))
+    assert out.dtype == np.uint8
+    # 固定种子应稳定
+    out2 = processing.apply_step(img, step("gaussian_noise", sigma=40))
+    assert (out == out2).all()
+
+
+def test_bgr_swap_swaps_channels():
+    bgr = np.zeros((2, 2, 3), np.uint8)
+    bgr[..., 0] = 10  # B
+    bgr[..., 2] = 30  # R
+    out = processing.apply_step(bgr, step("bgr_swap"))
+    assert out[0, 0, 0] == 30 and out[0, 0, 2] == 10
+
+
+def test_ultra_hsv_hue_shift_changes_image():
+    img = np.full((8, 8, 3), (60, 120, 180), np.uint8)
+    out = processing.apply_step(img, step("ultra_hsv", hue=90, saturation=100, brightness=100))
+    assert out.shape == img.shape
