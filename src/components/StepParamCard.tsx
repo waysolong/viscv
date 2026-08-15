@@ -1,6 +1,7 @@
-import { Switch, Typography, Divider } from "antd";
+import { Switch, Typography, Divider, Tooltip } from "antd";
+import { QuestionCircleOutlined } from "@ant-design/icons";
 import type { ParamValue, ProcessingStep } from "../types";
-import { specFor } from "../lib/enhancements";
+import { hintFor, specFor } from "../lib/enhancements";
 import ParamSlider from "./ui/ParamSlider";
 import ParamSelect from "./ui/ParamSelect";
 
@@ -18,6 +19,8 @@ export default function StepParamCard({ step, onUpdate }: Props) {
       </Typography.Text>
     );
   }
+  const hint = (name: string) => spec.params.find((x) => x.name === name)?.hint ?? hintFor(step.type, name);
+
   return (
     <div>
       {spec.params.map((p) => {
@@ -28,6 +31,7 @@ export default function StepParamCard({ step, onUpdate }: Props) {
             <ParamSlider
               key={p.name}
               label={p.label}
+              hint={hint(p.name)}
               value={Number(value)}
               min={p.min ?? 0}
               max={p.max ?? 100}
@@ -41,6 +45,7 @@ export default function StepParamCard({ step, onUpdate }: Props) {
             <ParamSelect
               key={p.name}
               label={p.label}
+              hint={hint(p.name)}
               value={value}
               options={p.options}
               onChange={set}
@@ -49,7 +54,14 @@ export default function StepParamCard({ step, onUpdate }: Props) {
         }
         return (
           <div key={p.name} className="mb-3 flex items-center justify-between">
-            <Typography.Text type="secondary">{p.label}</Typography.Text>
+            <span className="flex items-center gap-1">
+              <Typography.Text type="secondary">{p.label}</Typography.Text>
+              {hint(p.name) && (
+                <Tooltip title={hint(p.name)}>
+                  <QuestionCircleOutlined style={{ color: "rgba(0,0,0,0.45)", fontSize: 12 }} />
+                </Tooltip>
+              )}
+            </span>
             <Switch size="small" checked={Boolean(value)} onChange={(v) => set(v)} />
           </div>
         );

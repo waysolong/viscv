@@ -9,8 +9,52 @@ export interface ParamSpec {
   step?: number;
   default: ParamValue;
   options?: { label: string; value: ParamValue }[];
+  hint?: string;
 }
 
+
+/** 参数悬停提示：以 "算子:参数名" 为键，保证同名参数在不同算子里可给不同说明。 */
+export const PARAM_HINTS: Record<string, string> = {
+  "brightness:value": "以百分比调整整体明暗：正值变亮、负值变暗（0=不变）。",
+  "contrast:value": "对比度百分比：100=不变，<100 偏灰、>100 更分明。",
+  "gamma:value": "伽马值（×100）：100=不变，越大越亮、越小越暗。",
+  "saturation:value": "色彩饱和度百分比：100=不变，<100 变灰、>100 更鲜艳。",
+  "clahe:clip_limit": "局部对比度限制：越大对比度增强越弱（越能抑制噪点放大）。",
+  "clahe:tiles": "分块数量：越大局部自适应越细。",
+  "gaussian_blur:sigma": "高斯核 sigma：越大越模糊；核大小=0 时据此自动生成。",
+  "gaussian_blur:ksize": "高斯核大小（奇数）：0=按 sigma 自动，>0 用固定核。",
+  "median_blur:kernel": "中值滤波核大小（奇数）：越大去噪越强、越模糊。",
+  "box_blur:kernel": "盒式（均值）模糊核大小：越大越模糊。",
+  "sharpen:amount": "边缘增强幅度：0=原样，100=常规，越大越锐利（过大会出白边）。",
+  "sharpen:sigma": "求细节所用高斯核的 sigma：影响被增强的边缘尺度。",
+  "threshold:value": "二值化阈值：仅当关闭 Otsu 时生效（0~255）。",
+  "threshold:otsu": "勾选后自动求最优阈值（Otsu），并忽略上方手动阈值。",
+  "threshold:invert": "反相：把黑/白对调。",
+  "canny:low": "滞后阈值下限：低于此的弱边缘被丢弃。",
+  "canny:high": "滞后阈值上限：高于此的强边缘保留。",
+  "canny:aperture": "Canny 内部 Sobel 的孔径核大小（3/5/7）。",
+  "denoise:strength": "映射为中值滤波核大小：越大去噪越强、越模糊。",
+  "sepia:strength": "sepia 与原图的混合比例：0=原图，100=完全复古色。",
+  "posterize:levels": "色调层级数：越小色调越少、越扁平。",
+  "bilateral:d": "双边滤波邻域直径（核大小）。",
+  "bilateral:sigma_color": "颜色差阈值：越大越忽略细小色差。",
+  "bilateral:sigma_space": "空间距离阈值：越大影响范围越广。",
+  "morphology:op": "形态学运算类型：腐蚀/膨胀/开运算/闭运算。",
+  "morphology:kernel": "结构元素核大小。",
+  "morphology:iterations": "迭代次数：越大效果越明显。",
+  "adaptive_threshold:method": "局部邻域统计方式：均值或高斯加权。",
+  "adaptive_threshold:block": "局部邻域大小（奇数）：决定自适应范围。",
+  "adaptive_threshold:c": "从均值/加权均值里减去的常数：调阈值灵敏度。",
+  "adaptive_threshold:invert": "反相：把黑/白对调。",
+  "laplacian:ksize": "拉普拉斯核大小。",
+  "sobel:axis": "求导方向：X 出水平边缘、Y 出垂直边缘。",
+  "sobel:ksize": "Sobel 核大小。",
+  "flip:mode": "翻转方向：水平/垂直/双向。",
+};
+
+/** 返回某算子的某参数的提示（缺省时可用 spec 上的 hint）。 */
+export const hintFor = (type: string, name: string): string | undefined =>
+  PARAM_HINTS[`${type}:${name}`];
 export interface EnhancementSpec {
   type: EnhancementType;
   label: string;
@@ -96,7 +140,7 @@ const S: Record<EnhancementType, EnhancementSpec> = {
     description: "强化边缘与细节，为原始减去模糊的差值加权。",
     group: "细节",
     params: [
-      { name: "amount", label: "强度", kind: "number", min: 0, max: 300, step: 1, default: 100 },
+      { name: "amount", label: "边缘增强", kind: "number", min: 0, max: 300, step: 1, default: 100 },
       { name: "sigma", label: "sigma", kind: "number", min: 1, max: 50, step: 1, default: 5 },
     ],
   },
@@ -128,7 +172,7 @@ const S: Record<EnhancementType, EnhancementSpec> = {
     description: "轻度平滑以抑制噪声，强度越高越模糊。",
     group: "滤波",
     params: [
-      { name: "strength", label: "强度", kind: "number", min: 1, max: 7, step: 1, default: 3 },
+      { name: "strength", label: "平滑核大小", kind: "number", min: 1, max: 7, step: 1, default: 3 },
     ],
   },
   saturation: {
@@ -145,7 +189,7 @@ const S: Record<EnhancementType, EnhancementSpec> = {
   },
   sepia: {
     type: "sepia", label: "复古色调", description: "叠加经典 sepia 暖色调。", group: "颜色",
-    params: [ { name: "strength", label: "强度", kind: "number", min: 0, max: 100, step: 1, default: 100 } ],
+    params: [ { name: "strength", label: "复古比例(%)", kind: "number", min: 0, max: 100, step: 1, default: 100 } ],
   },
   posterize: {
     type: "posterize", label: "色调分离", description: "把连续色调聚合成少量层级。", group: "颜色",
