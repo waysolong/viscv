@@ -33,6 +33,8 @@ export default function StepList({
 }: Props) {
   const listRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<DragState | null>(null);
+  const lastUpRef = useRef<number>(0);
+  const suppressClickRef = useRef<boolean>(false);
   const [dragView, setDragView] = useState<DragState | null>(null);
 
   const overIndexFromY = (clientY: number): number => {
@@ -55,6 +57,7 @@ export default function StepList({
       setDragView({ id: d.id, startY: d.startY, curX: d.curX, curY: d.curY });
     };
     const onUp = (e: MouseEvent) => {
+      lastUpRef.current = Date.now();
       const d = dragRef.current;
       if (!d) return;
       dragRef.current = null;
@@ -114,11 +117,24 @@ export default function StepList({
                   if (e.button !== 0) return;
                   const t = e.target as HTMLElement;
                   if (t.closest("button") || t.closest(".ant-switch") || t.closest("input")) return;
-                  e.preventDefault();
-                  dragRef.current = { id: step.id, startY: e.clientY, curX: e.clientX, curY: e.clientY };
-                  setDragView({ id: step.id, startY: e.clientY, curX: e.clientX, curY: e.clientY });
+                  const now = Date.now();
+                  // 只有快速双击（距上次松开 < 450ms）的第二次按下才启动拖拽
+                  if (now - lastUpRef.current < 450) {
+                    e.preventDefault();
+                    suppressClickRef.current = true;
+                    dragRef.current = { id: step.id, startY: e.clientY, curX: e.clientX, curY: e.clientY };
+                    setDragView({ id: step.id, startY: e.clientY, curX: e.clientX, curY: e.clientY });
+                  } else {
+                    dragRef.current = null;
+                  }
                 }}
-                onClick={() => onSelect(selected ? null : step.id)}
+                onClick={() => {
+                  if (suppressClickRef.current) {
+                    suppressClickRef.current = false;
+                    return;
+                  }
+                  onSelect(selected ? null : step.id);
+                }}
               >
                 <div className="flex items-center justify-between">
                   <Typography.Text strong style={{ fontSize: 13 }}>
