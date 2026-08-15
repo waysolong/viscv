@@ -107,7 +107,7 @@ export default function StepList({
                   step.enabled ? "" : "opacity-60"
                 }`}
                 style={{
-                  cursor: isDragging ? "grabbing" : "grab",
+                  cursor: isDragging ? "grabbing" : "default",
                   userSelect: dragView ? "none" : undefined,
                   opacity: isDragging ? 0.25 : undefined,
                   borderTop: isLanding ? "3px solid #6366f1" : undefined,
