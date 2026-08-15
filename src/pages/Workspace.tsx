@@ -11,7 +11,7 @@ import HistogramPanel from "../components/HistogramPanel";
 import StepList from "../components/StepList";
 import PageCard from "../components/ui/PageCard";
 import EmptyState from "../components/ui/EmptyState";
-import { uid } from "../lib/enhancements";
+import { uid, WORKSPACE_TYPES } from "../lib/enhancements";
 import type { EnhancementType, ImageInfo, Project } from "../types";
 
 function emptyHistograms() {
@@ -172,6 +172,7 @@ export default function Workspace() {
               onMove={editor.moveStep}
               onMoveTo={editor.moveStepTo}
               onAdd={(t: EnhancementType) => editor.addStep(t)}
+              types={WORKSPACE_TYPES}
             />
           </PageCard>
 
