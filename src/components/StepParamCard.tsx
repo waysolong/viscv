@@ -1,7 +1,7 @@
-import { Switch, Typography, Divider, Tooltip } from "antd";
-import { QuestionCircleOutlined } from "@ant-design/icons";
+import { Button, Switch, Typography, Divider, Tooltip } from "antd";
+import { QuestionCircleOutlined, ReloadOutlined } from "@ant-design/icons";
 import type { ParamValue, ProcessingStep } from "../types";
-import { hintFor, specFor } from "../lib/enhancements";
+import { defaultParams, hintFor, specFor } from "../lib/enhancements";
 import ParamSlider from "./ui/ParamSlider";
 import ParamSelect from "./ui/ParamSelect";
 
@@ -23,6 +23,11 @@ export default function StepParamCard({ step, onUpdate }: Props) {
 
   return (
     <div>
+      <div className="mb-2 flex justify-end">
+        <Button size="small" type="link" icon={<ReloadOutlined />} onClick={() => onUpdate({ params: defaultParams(step.type) })}>
+          恢复默认参数
+        </Button>
+      </div>
       {spec.params.map((p) => {
         const value = step.params[p.name] ?? p.default;
         const set = (v: ParamValue) => onUpdate({ params: { [p.name]: v } });
