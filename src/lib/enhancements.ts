@@ -78,6 +78,7 @@ const S: Record<EnhancementType, EnhancementSpec> = {
     group: "滤波",
     params: [
       { name: "sigma", label: "sigma", kind: "number", min: 1, max: 100, step: 1, default: 10 },
+      { name: "ksize", label: "核大小(0=自动)", kind: "number", min: 0, max: 31, step: 2, default: 0 },
     ],
   },
   median_blur: {
@@ -118,6 +119,7 @@ const S: Record<EnhancementType, EnhancementSpec> = {
     params: [
       { name: "low", label: "低阈值", kind: "number", min: 1, max: 255, step: 1, default: 50 },
       { name: "high", label: "高阈值", kind: "number", min: 1, max: 255, step: 1, default: 150 },
+      { name: "aperture", label: "核大小(孔径)", kind: "number", min: 3, max: 7, step: 2, default: 3 },
     ],
   },
   denoise: {

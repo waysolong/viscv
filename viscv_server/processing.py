@@ -116,6 +116,12 @@ def _clahe(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
 
 def _gaussian_blur(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
     sigma = float(_p(step, "sigma", 10.0)) / 10.0
+    k = int(_p(step, "ksize", 0.0))
+    if k >= 3:
+        if k % 2 == 0:
+            k += 1
+        k = min(k, 31)
+        return cv2.GaussianBlur(img, (k, k), sigma)
     if sigma <= 0:
         return img
     return cv2.GaussianBlur(img, (0, 0), sigma)
@@ -159,7 +165,10 @@ def _canny(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     low = float(_p(step, "low", 50.0))
     high = float(_p(step, "high", 150.0))
-    edges = cv2.Canny(gray, low, high)
+    aperture = int(np.clip(_p(step, "aperture", 3.0), 3, 7))
+    if aperture % 2 == 0:
+        aperture += 1
+    edges = cv2.Canny(gray, low, high, apertureSize=aperture)
     return _stack3(edges)
 
 
