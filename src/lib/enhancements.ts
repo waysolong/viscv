@@ -282,6 +282,25 @@ const S: Record<EnhancementType, EnhancementSpec> = {
     type: "bgr_swap", label: "通道交换(BGR)", description: "交换 R/B 通道，模拟通道顺序错误（Ultralytics bgr 增广）。", group: "图像增强",
     params: [],
   },
+  mosaic: {
+    type: "mosaic", label: "Mosaic 拼接", description: "2x2 马赛克：四块取自本图的不同翻转变体，再缩回原尺寸（单图版，其余图用翻转变体近似）。", group: "深度学习增强",
+    params: [],
+  },
+  mixup: {
+    type: "mixup", label: "MixUp 混合", description: "把本图与它的翻转变体按 alpha 线性混合（单图近似版）。", group: "深度学习增强",
+    params: [ { name: "alpha", label: "混合比α", kind: "number", min: 0, max: 100, step: 5, default: 50 } ],
+  },
+  cutmix: {
+    type: "cutmix", label: "CutMix 块融合", description: "把翻转变体的一个矩形块贴到本图上（单图近似版）。", group: "深度学习增强",
+    params: [ { name: "area", label: "块面积%", kind: "number", min: 0, max: 90, step: 5, default: 25 } ],
+  },
+  cutout: {
+    type: "cutout", label: "Cutout 擦除", description: "随机擦除一块区域（等价 RandomErasing/Cutout）。", group: "深度学习增强",
+    params: [
+      { name: "area", label: "擦除面积%", kind: "number", min: 0, max: 90, step: 5, default: 25 },
+      { name: "fill", label: "填充值", kind: "number", min: 0, max: 255, step: 1, default: 128 },
+    ],
+  },
 };
 
 export const ENHANCEMENTS: EnhancementSpec[] = Object.values(S);

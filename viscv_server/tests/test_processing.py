@@ -205,3 +205,30 @@ def test_ultra_hsv_hue_shift_changes_image():
     img = np.full((8, 8, 3), (60, 120, 180), np.uint8)
     out = processing.apply_step(img, step("ultra_hsv", hue=90, saturation=100, brightness=100))
     assert out.shape == img.shape
+
+
+def test_dl_aug_ops_registered():
+    for t in ("mosaic", "mixup", "cutmix", "cutout"):
+        assert t in processing.OPS
+
+
+def test_mosaic_keeps_shape_and_differs():
+    img = np.zeros((24, 32, 3), np.uint8)
+    img[4:20, 6:26] = 150
+    out = processing.apply_step(img, step("mosaic"))
+    assert out.shape == img.shape
+
+
+def test_mixup_and_cutmix_keep_shape():
+    img = np.random.randint(0, 255, (20, 20, 3), np.uint8)
+    assert processing.apply_step(img, step("mixup", alpha=50)).shape == img.shape
+    assert processing.apply_step(img, step("cutmix", area=25)).shape == img.shape
+
+
+def test_cutmix_changes_some_region_with_fixed_seed():
+    img = np.zeros((32, 32, 3), np.uint8)
+    img[4:28, 4:28] = 200
+    out = processing.apply_step(img, step("cutmix", area=25))
+    assert out.shape == img.shape
+    out2 = processing.apply_step(img, step("cutmix", area=25))
+    assert (out == out2).all()

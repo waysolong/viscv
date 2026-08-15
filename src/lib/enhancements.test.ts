@@ -11,6 +11,7 @@ describe("enhancement catalog", () => {
       "box_blur", "bilateral", "morphology", "adaptive_threshold",
       "laplacian", "sobel", "flip",
       "ultra_hsv", "ultra_perspective", "ultra_erase", "gaussian_noise", "bgr_swap",
+      "mosaic", "mixup", "cutmix", "cutout",
     ];
     expect(ENHANCEMENTS.map((e) => e.type).sort()).toEqual(expected.sort());
   });

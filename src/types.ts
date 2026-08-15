@@ -27,7 +27,11 @@ export type EnhancementType =
   | "ultra_perspective"
   | "ultra_erase"
   | "gaussian_noise"
-  | "bgr_swap";
+  | "bgr_swap"
+  | "mosaic"
+  | "mixup"
+  | "cutmix"
+  | "cutout";
 
 export type ParamValue = number | string | boolean;
 

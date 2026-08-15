@@ -18,6 +18,7 @@ STEP_TYPES = {
     "saturation", "white_balance", "invert", "sepia", "posterize",
     "box_blur", "bilateral", "morphology", "adaptive_threshold", "laplacian", "sobel", "flip",
     "ultra_hsv", "ultra_perspective", "ultra_erase", "gaussian_noise", "bgr_swap",
+    "mosaic", "mixup", "cutmix", "cutout",
 }
 
 
@@ -353,6 +354,51 @@ def _bgr_swap(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
     return cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
 
+
+
+# ---------- 深度学习增强（Mosaic/MixUp/CutMix/Cutout，单图同源派生） ----------
+
+def _mosaic(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
+    """2x2 马赛克拼接：四个图块取自同一张图的不同翻转变体，再缩回原尺寸。"""
+    h, w = img.shape[:2]
+    v1 = cv2.flip(img, 1)   # 左右
+    v2 = cv2.flip(img, 0)   # 上下
+    v3 = cv2.resize(cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE), (w, h), interpolation=cv2.INTER_LINEAR)
+    canvas = np.zeros((2 * h, 2 * w, 3), np.uint8)
+    canvas[0:h, 0:w] = img
+    canvas[0:h, w:2 * w] = v1
+    canvas[h:2 * h, 0:w] = v2
+    canvas[h:2 * h, w:2 * w] = v3
+    return cv2.resize(canvas, (w, h), interpolation=cv2.INTER_LINEAR)
+
+
+def _mixup(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
+    """MixUp：按 alpha 把本图与其翻转变体线性混合。"""
+    alpha = float(np.clip(_p(step, "alpha", 50.0), 0, 100)) / 100.0
+    other = cv2.flip(img, 1)
+    return _clip8(img.astype(np.float32) * alpha + other.astype(np.float32) * (1 - alpha))
+
+
+def _cutmix(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
+    """CutMix：把翻转变体的一个矩形块贴到本图上（固定种子定位）。"""
+    area = float(np.clip(_p(step, "area", 25.0), 0, 90)) / 100.0
+    other = cv2.flip(img, 1)
+    h, w = img.shape[:2]
+    bw = max(1, int(w * (area ** 0.5)))
+    bh = max(1, int(h * (area ** 0.5)))
+    rng = np.random.default_rng(0)
+    x0 = int(rng.uniform(0, max(1, w - bw)))
+    y0 = int(rng.uniform(0, max(1, h - bh)))
+    out = img.copy()
+    out[y0:y0 + bh, x0:x0 + bw] = other[y0:y0 + bh, x0:x0 + bw]
+    return out
+
+
+def _cutout(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
+    """Cutout（随机擦除）：擦掉一块区域，等价于 RandomErasing。"""
+    return _ultra_erase(img, step)
+
+
 OPS = {
     "brightness": _brightness,
     "contrast": _contrast,
@@ -383,6 +429,10 @@ OPS = {
     "ultra_erase": _ultra_erase,
     "gaussian_noise": _gaussian_noise,
     "bgr_swap": _bgr_swap,
+    "mosaic": _mosaic,
+    "mixup": _mixup,
+    "cutmix": _cutmix,
+    "cutout": _cutout,
 }
 
 
