@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Card, Tag, Typography, Modal } from "antd";
 import PageCard from "../components/ui/PageCard";
-import { Bars, ConfusionViz, IoUViz, Legend, Line, TPFPFNViz } from "../components/MetricVisuals";
+import { AJIViz, Bars, ConfusionViz, IoUViz, Legend, Line, TPFPFNViz } from "../components/MetricVisuals";
 
 interface MetricInfo { name: string; badge: string; color: string; short: string }
 
@@ -19,6 +19,8 @@ const METRICS: MetricInfo[] = [
   { name: "Accuracy Top-1 / Top-5", badge: "分类", color: "cyan", short: "分类正确率" },
   { name: "OKS（姿态）", badge: "姿态", color: "orange", short: "关键点相似度" },
   { name: "Mask mAP（分割）", badge: "分割", color: "gold", short: "掩膜贴合度" },
+  { name: "AJI 聚合 Jaccard", badge: "细胞分割", color: "magenta", short: "实例分割聚合指标，惩罚漏检/误检与切分" },
+  { name: "PQ 全景质量", badge: "分割", color: "magenta", short: "RQ×SQ，兼顾识别与分割质量" },
   { name: "mAP50-95(OBB) 旋转框", badge: "OBB", color: "lime", short: "旋转框重叠" },
   { name: "fitness（选模型用）", badge: "工具", color: "default", short: "ultralytics 评分" },
 ];
@@ -154,6 +156,21 @@ function MetricDetail({ name }: { name: string }) {
       return (<>
         <H t="定义" /><Block t="ultralytics 用一个加权标量给模型打分以便自动挑 best.pt：detect 任务 fitness = 0.1×mAP50 + 0.9×mAP50-95。"/>
         <Row k="示例" v="0.1×0.72 + 0.9×0.53 = 0.549" /><NotReal />
+      </>);
+    case "AJI 聚合 Jaccard":
+      return (<>
+        <H t="定义" /><Block t="AJI（Aggregated Jaccard Index）是实例分割的聚合 IoU：除匹配对的交集/并集外，把漏检的 GT、误检的预测也计入惩罚，能反映‘一个真目标被多个预测切分’或漏检的问题，核/细胞分割常用。"/>
+        <H t="图解" /><AJIViz />
+        <H t="公式" /><Block t="AJI = Σ|GT∩P| / ( Σ|GT∪P| + Σ漏检GT + Σ误检pred )" />
+        <H t="示例数据" /><Row k="匹配对交集" v="1500 px²" /><Row k="匹配对并集" v="2100 px²" />
+        <Row k="漏检GT + 误检pred" v="+800 + 550 px²" /><Row k="AJI" v="1500 / (2100+800+550) ≈ 0.435" /><NotReal />
+      </>);
+    case "PQ 全景质量":
+      return (<>
+        <H t="定义" /><Block t="PQ（Panoptic Quality）用于全景/实例分割：PQ = RQ × SQ。RQ 是识别质量（该认的认对没），SQ 是分割质量（轮廓贴合得细不细）。"/>
+        <H t="公式" /><Block t="SQ = ΣIoU / TP；RQ = TP/(TP + 0.5·FP + 0.5·FN)；PQ = RQ × SQ" />
+        <H t="图解" /><Bars items={[{label:"SQ",value:0.80},{label:"RQ",value:0.85},{label:"PQ",value:0.68}]} color="#d946ef" />
+        <H t="示例数据" /><Row k="SQ / RQ" v="0.80 / 0.85" /><Row k="PQ" v="0.80 × 0.85 = 0.68" /><NotReal />
       </>);
     default:
       return null;

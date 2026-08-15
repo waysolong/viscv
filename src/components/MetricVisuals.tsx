@@ -105,6 +105,22 @@ export function ConfusionViz({ matrix, labels }:
   );
 }
 
+// AJI：一对匹配实例 + 一个漏检 GT + 一个误检预测，示意聚合惩罚
+export function AJIViz() {
+  return (
+    <svg viewBox="0 0 260 120" style={{ width: "100%", height: 160 }}>
+      <text x="8" y="14" fontSize="11" fill="#888">匹配对（算交集/并集）</text>
+      <rect x="30" y="22" width="70" height="55" fill="rgba(22,163,74,0.22)" stroke="#16a34a" strokeWidth="2" />
+      <rect x="58" y="14" width="55" height="45" fill="rgba(59,130,246,0.22)" stroke="#3b82f6" strokeWidth="2" />
+      <text x="40" y="95" fontSize="11" fill="#16a34a">GT</text>
+      <text x="95" y="55" fontSize="11" fill="#3b82f6">pred</text>
+      <text x="150" y="14" fontSize="11" fill="#888">漏检 GT（无匹配预测）</text>
+      <rect x="150" y="22" width="50" height="55" fill="rgba(245,158,11,0.3)" stroke="#f59e0b" strokeWidth="2" />
+      <text x="215" y="14" fontSize="11" fill="#888">误检 pred（无匹配 GT）</text>
+      <rect x="215" y="22" width="38" height="40" fill="rgba(239,68,68,0.28)" stroke="#ef4444" strokeWidth="2" />
+    </svg>
+  );
+}
 export function Legend({ items }: { items: { color: string; label: string }[] }) {
   return (
     <div className="mt-2 flex flex-wrap gap-4">
