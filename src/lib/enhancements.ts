@@ -321,3 +321,8 @@ export function uid(): string {
 export function createStep(type: EnhancementType): ProcessingStep {
   return { id: uid(), type, enabled: true, params: defaultParams(type) };
 }
+/** 图像增强模块（并列于图像工作台的独立页面）所包含的算子类型。 */
+export const AUGMENT_TYPES: EnhancementType[] = [
+  "ultra_hsv", "ultra_perspective", "ultra_erase", "gaussian_noise", "bgr_swap",
+  "mosaic", "mixup", "cutmix", "cutout",
+];

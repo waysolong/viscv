@@ -17,6 +17,8 @@ interface Props {
   onMove: (id: string, dir: -1 | 1) => void;
   onMoveTo: (id: string, toIndex: number) => void;
   onAdd: (type: ProcessingStep["type"]) => void;
+  /** 可选：只显示这些类型的操作按钮；缺省显示全部。 */
+  types?: ProcessingStep["type"][];
 }
 
 interface DragState {
@@ -27,7 +29,7 @@ interface DragState {
 }
 
 export default function StepList({
-  steps, selectedId, onSelect, onUpdate, onRemove, onToggle, onMove, onMoveTo, onAdd,
+  steps, selectedId, onSelect, onUpdate, onRemove, onToggle, onMove, onMoveTo, onAdd, types,
 }: Props) {
   const listRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<DragState | null>(null);
@@ -76,7 +78,7 @@ export default function StepList({
   return (
     <div className="flex h-full flex-col overflow-hidden">
       <div className="mb-2 flex flex-wrap gap-1">
-        {ENHANCEMENTS.map((e) => (
+        {(types ? ENHANCEMENTS.filter((e) => types.includes(e.type)) : ENHANCEMENTS).map((e) => (
           <Tooltip key={e.type} title={e.label}>
             <Button size="small" icon={<PlusOutlined />} onClick={() => onAdd(e.type)} style={{ paddingInline: 8 }}>
               {e.label}

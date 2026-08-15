@@ -43,7 +43,8 @@ const pushHistory = (
   return { steps: steps.map(cloneStep), past: nextPast };
 };
 
-export const useEditor = create<EditorState>((set) => ({
+function buildEditorStore() {
+  return create<EditorState>((set) => ({
   originalPath: null,
   original: null,
   result: null,
@@ -122,7 +123,11 @@ export const useEditor = create<EditorState>((set) => ({
     }),
   setSteps: (steps) => set({ steps: steps.map(cloneStep) }),
   clear: () => set({ originalPath: null, original: null, result: null, steps: [], past: [], future: [], selectedId: null, error: null }),
-}));
+  }));
+}
+
+export const useEditor = buildEditorStore();
+export const useAugment = buildEditorStore();
 
 interface ProjectState {
   items: Project[];
