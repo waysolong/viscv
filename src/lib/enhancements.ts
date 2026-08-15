@@ -349,6 +349,7 @@ export function createStep(type: EnhancementType): ProcessingStep {
 export const AUGMENT_TYPES: EnhancementType[] = [
   "ultra_hsv", "ultra_perspective", "ultra_erase", "gaussian_noise", "bgr_swap",
   "mosaic", "mixup", "cutmix", "cutout",
+  "jpeg_compress", "letterbox", "center_crop", "random_crop", "solarize", "salt_pepper",
 ];
 /** 图像工作台（workspace）展示的算子：排除独立「图像增强」模块的算子。 */
 export const WORKSPACE_TYPES: EnhancementType[] = ENHANCEMENTS.filter(
