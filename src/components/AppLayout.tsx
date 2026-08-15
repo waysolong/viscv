@@ -1,7 +1,7 @@
 import { Layout, Menu, Button, theme } from "antd";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
-  AppstoreOutlined, FolderOpenOutlined, StarOutlined, FileTextOutlined, ExperimentOutlined,
+  AppstoreOutlined, FolderOpenOutlined, StarOutlined, FileTextOutlined, ExperimentOutlined, BarChartOutlined,
   SettingOutlined, InfoCircleOutlined, MenuFoldOutlined, MenuUnfoldOutlined, PictureOutlined,
 } from "@ant-design/icons";
 import { useUi } from "../lib/stores";
@@ -10,6 +10,7 @@ const items = [
   { key: "/", icon: <PictureOutlined />, label: "图像工作台" },
   { key: "/augment", icon: <ExperimentOutlined />, label: "图像增强" },
   { key: "/projects", icon: <FolderOpenOutlined />, label: "项目库" },
+  { key: "/metrics", icon: <BarChartOutlined />, label: "指标说明" },
   { key: "/presets", icon: <StarOutlined />, label: "预设库" },
   { key: "/notes", icon: <FileTextOutlined />, label: "笔记" },
   { key: "/settings", icon: <SettingOutlined />, label: "设置" },

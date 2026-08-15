@@ -4,6 +4,7 @@ import { HashRouter, Routes, Route } from "react-router-dom";
 import AppLayout from "./components/AppLayout";
 import Workspace from "./pages/Workspace";
 import ImageAugmentation from "./pages/ImageAugmentation";
+import MetricsGuide from "./pages/MetricsGuide";
 import Projects from "./pages/Projects";
 import Presets from "./pages/Presets";
 import Notes from "./pages/Notes";
@@ -25,6 +26,7 @@ export default function App() {
             <Route element={<AppLayout />}>
               <Route index element={<Workspace />} />
               <Route path="augment" element={<ImageAugmentation />} />
+              <Route path="metrics" element={<MetricsGuide />} />
               <Route path="projects" element={<Projects />} />
               <Route path="presets" element={<Presets />} />
               <Route path="notes" element={<Notes />} />
