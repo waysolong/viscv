@@ -41,6 +41,13 @@ graph LR
 | 形态 | 形态学（腐蚀/膨胀/开/闭） |\n| 图像增强 | HSV 调整、几何变换(透视)、随机擦除、高斯噪声、通道交换(BGR)、JPEG 压缩、LetterBox 填充、中心/随机裁剪、太阳化、椒盐噪声 |\n| 深度学习增强 | Mosaic 拼接、MixUp 混合、CutMix 块融合、Cutout 擦除 |
 | 变换 | 水平/垂直/双向翻转 |
 
+## 界面示例
+
+![界面示例 1](assets/image1.jpg)
+
+![界面示例 2](assets/image2.jpg)
+
+![界面示例 3](assets/image3.jpg)
 ## 快速开始
 
 前置：Node.js ≥ 20、Rust（MSVC 工具链）、Python ≥ 3.10。
