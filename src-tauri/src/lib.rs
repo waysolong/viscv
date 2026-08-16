@@ -2,7 +2,7 @@ mod commands;
 mod engine;
 mod models;
 
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 use tauri::Manager;
 
 use engine::Engine;
@@ -22,7 +22,7 @@ pub fn run() {
             if let Err(e) = engine.start() {
                 eprintln!("[viscv] 图像引擎启动失败：{}", e);
             }
-            app.manage(Mutex::new(engine));
+            app.manage(Arc::new(Mutex::new(engine)));
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

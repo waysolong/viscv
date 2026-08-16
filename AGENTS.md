@@ -43,6 +43,8 @@ Python 引擎：
 
 运行时选择引擎：环境变量 `VISCV_ENGINE_PY`（Python 解释器，dev 用）或 `VISCV_ENGINE_EXE`（已打包 exe）；`VISCV_PORT`（默认 18999）、`VISCV_DATA_DIR`（数据目录，Rust 自动传入）。
 
+> 引擎复用注意：启动时若端口上已有健康引擎（如上次 tauri dev 遗留未回收的进程）会直接复用。改了 `viscv_server/` 代码后，重启应用前请确保旧引擎已退出（结束 viscv_server 进程，或临时更换 `VISCV_PORT`），否则会用到旧算子。
+
 ## Style & Naming
 
 - 前端：严格 TS；组件 `PascalCase.tsx`；函数/变量 `camelCase`；Hook 前缀 `use`。
