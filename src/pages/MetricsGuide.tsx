@@ -92,7 +92,8 @@ function MetricDetail({ name }: { name: string }) {
         <Line points={pr} color="#16a34a" height={200} xLabel="Recall (召回率)" yLabel="Precision (精确率)" />
         <H t="手把手" /><Row k="曲线下面积" v="约 0.72（右图）" />
         <Row k="含义" v="这个类别在宽松/严格各种阈值下整体都稳，AP 才高" />
-        <H t="注意" /><Block t="AP 是“每个类别一个数”；把所有类别的 AP 平均就得到 mAP。别把 AP 和 mAP 混掉。" />
+        <H t="注意（重要）" />
+      <Block t="① AP 是“每个类别一个数”，所有类别的 AP 平均才是 mAP，别混淆。② 画 AP 用的 PR 曲线必须先【按类别分组】，再到组内【按置信度排序、逐框 IoU 匹配】——具体画法见「PR 曲线 / MC 曲线」详解。" />
         <NotReal />
       </>);
     }
@@ -132,10 +133,17 @@ function MetricDetail({ name }: { name: string }) {
       <NotReal />
     </>);
     case "PR 曲线 / MC 曲线": return (<>
-      <Block t="一句话：模型有个‘置信度阈值’——你说‘置信度 ≥ 多少才算检出’。把阈值从低拉到高，Precision/Recall（或 mAP 等）会跟着变，画成曲线就是 PR/MC 曲线。" />
+      <Block t="一句话：PR 曲线记录‘改变置信度阈值时 Precision 和 Recall 如何此消彼长’，曲线下面积就是 AP。它一定是在【某个类别内部】算的。" />
       <Analogy c="阈值低 = 来者不拒（抓得全但误报多）；阈值高 = 宁缺毋滥（报得准但漏得多）。曲线就是这条权衡的完整记录。" />
-      <H t="图解：P-R 随置信度" /><Line points={[[0.2,0.9],[0.4,0.72],[0.6,0.55],[0.8,0.4]]} color="#7c3aed" xLabel="置信度阈值" yLabel="Precision" />
-      <H t="怎么用" /><Block t="一般选 P、R 都尽量高的那个阈值（常看 F1 峰），既别太饥渴也别太挑剔。" />
+      <H t="完整画法（先分组、再匹配、后排序）" />
+      <Block t="第 1 步 · 按类别分组：只挑“猫”的预测框和猫的真实框，其他类别一概不进来（每条 PR 曲线对应一个类别）。" />
+      <Block t="第 2 步 · 逐框 IoU 匹配：把猫的预测框与猫的真实框做 IoU 匹配（IoU≥0.5 算对上）。命中且前一个真实框还没被占用 → TP；没命中 → FP；没被任何预测认领的真实框 → FN。且一个真实框只能被认领一次。" />
+      <Block t="第 3 步 · 组内按置信度从高到低排序：匹配过的预测框按置信度降序排好。" />
+      <Block t="第 4 步 · 扫阈值：从最严（只放最高置信度）到最松（全放），每档按已放进的预测统计 TP/FP/FN，算出 P 和 R。" />
+      <Block t="第 5 步 · 连线：以 Recall 为横轴、Precision 为纵轴把这些点连成折线 → 该类别 PR 曲线；曲线下面积 = 该类别 AP。" />
+      <Block t="第 6 步 · 汇总：对每个类别各画一条，取各自 AP 的平均 → mAP。" />
+      <H t="图解：某类别的 P-R 权衡" /><Line points={[[0.2,0.9],[0.4,0.72],[0.6,0.55],[0.8,0.4]]} color="#7c3aed" xLabel="置信度阈值" yLabel="Precision" />
+      <H t="怎么用" /><Block t="一般选 P、R 都尽量高的那个阈值（常看 F1 峰）。想让曲线右上角更大，就要提高“既报得准又不漏”的能力——这往往靠更多/更干净的数据或更好的网络。" />
       <NotReal />
     </>);
     case "Accuracy Top-1 / Top-5": return (<>
