@@ -65,4 +65,17 @@ describe("editor store (累积管线)", () => {
     useEditor.getState().moveStepTo(useEditor.getState().steps[0].id, 0);
     expect(useEditor.getState().past.length).toBe(pastBefore);
   });
+  it("slider live updates keep only one history entry via beginEdit", () => {
+    useEditor.getState().addStep("threshold");
+    const id = useEditor.getState().steps[0].id;
+    expect(useEditor.getState().steps[0].params.value).toBe(128);
+    const before = useEditor.getState().past.length;
+    useEditor.getState().beginEdit();
+    useEditor.getState().updateStepLive(id, { params: { value: 200 } });
+    useEditor.getState().updateStepLive(id, { params: { value: 250 } });
+    expect(useEditor.getState().steps[0].params.value).toBe(250);
+    expect(useEditor.getState().past.length).toBe(before + 1);
+    useEditor.getState().undo();
+    expect(useEditor.getState().steps[0].params.value).toBe(128);
+  });
 });

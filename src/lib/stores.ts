@@ -21,6 +21,8 @@ interface EditorState {
   setError: (e: string | null) => void;
   addStep: (t: EnhancementType) => void;
   updateStep: (id: string, params: Partial<ProcessingStep>) => void;
+  updateStepLive: (id: string, params: Partial<ProcessingStep>) => void;
+  beginEdit: () => void;
   removeStep: (id: string) => void;
   toggleStep: (id: string) => void;
   moveStep: (id: string, dir: -1 | 1) => void;
@@ -72,6 +74,20 @@ function buildEditorStore() {
       const { steps, past } = pushHistory(s.steps, s.past);
       steps[idx] = { ...cloneStep(steps[idx]), ...patch, params: patch.params ? { ...steps[idx].params, ...patch.params } : steps[idx].params };
       return { steps, past, future: [] };
+    }),
+  updateStepLive: (id, patch) =>
+    set((s) => {
+      const idx = s.steps.findIndex((x) => x.id === id);
+      if (idx < 0) return s;
+      const steps = s.steps.map(cloneStep);
+      steps[idx] = { ...steps[idx], ...patch, params: patch.params ? { ...steps[idx].params, ...patch.params } : steps[idx].params };
+      return { steps, future: [] };
+    }),
+  beginEdit: () =>
+    set((s) => {
+      const nextPast = [...s.past, s.steps.map(cloneStep)];
+      if (nextPast.length > 50) nextPast.shift();
+      return { past: nextPast, future: [] };
     }),
   removeStep: (id) =>
     set((s) => {

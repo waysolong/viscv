@@ -8,9 +8,13 @@ import ParamSelect from "./ui/ParamSelect";
 interface Props {
   step: ProcessingStep;
   onUpdate: (patch: Partial<ProcessingStep>) => void;
+  /** 滑块拖动中的实时更新（不写撤销历史）。 */
+  onUpdateLive: (patch: Partial<ProcessingStep>) => void;
+  /** 滑块拖动开始，记录一次撤销快照。 */
+  onBeginEdit: () => void;
 }
 
-export default function StepParamCard({ step, onUpdate }: Props) {
+export default function StepParamCard({ step, onUpdate, onUpdateLive, onBeginEdit }: Props) {
   const spec = specFor(step.type);
   if (spec.params.length === 0) {
     return (
@@ -41,7 +45,8 @@ export default function StepParamCard({ step, onUpdate }: Props) {
               min={p.min ?? 0}
               max={p.max ?? 100}
               step={p.step ?? 1}
-              onChange={(v) => set(v)}
+              onChange={(v) => onUpdateLive({ params: { [p.name]: v } })}
+              onEditStart={onBeginEdit}
             />
           );
         }

@@ -155,7 +155,7 @@ def _threshold(img: np.ndarray, step: Dict[str, Any]) -> np.ndarray:
     otsu = _pb(step, "otsu", True)
     invert = _pb(step, "invert", False)
     if otsu:
-        flags = cv2.THRESH_BINARY | cv2.THRESH_OTSU
+        flags = (cv2.THRESH_BINARY_INV if invert else cv2.THRESH_BINARY) | cv2.THRESH_OTSU
     elif invert:
         flags = cv2.THRESH_BINARY_INV
     else:

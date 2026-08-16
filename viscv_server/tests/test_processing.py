@@ -283,3 +283,10 @@ def test_random_crop_stable_with_seed():
     o1 = processing.apply_step(img, step("random_crop", keep=60))
     o2 = processing.apply_step(img, step("random_crop", keep=60))
     assert o1.shape == o2.shape and (o1 == o2).all()
+
+
+def test_threshold_otsu_respects_invert():
+    img = np.zeros((8, 8, 3), dtype=np.uint8)
+    img[0:4] = 255
+    out = processing.apply_step(img, step("threshold", otsu=True, invert=True, value=0))
+    assert out[0, 0, 0] == 0 and out[4, 0, 0] == 255

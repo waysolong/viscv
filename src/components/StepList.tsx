@@ -12,6 +12,8 @@ interface Props {
   selectedId: string | null;
   onSelect: (id: string | null) => void;
   onUpdate: (id: string, patch: Partial<ProcessingStep>) => void;
+  onUpdateLive: (id: string, patch: Partial<ProcessingStep>) => void;
+  onBeginEdit: () => void;
   onRemove: (id: string) => void;
   onToggle: (id: string) => void;
   onMove: (id: string, dir: -1 | 1) => void;
@@ -29,7 +31,7 @@ interface DragState {
 }
 
 export default function StepList({
-  steps, selectedId, onSelect, onUpdate, onRemove, onToggle, onMove, onMoveTo, onAdd, types,
+  steps, selectedId, onSelect, onUpdate, onUpdateLive, onBeginEdit, onRemove, onToggle, onMove, onMoveTo, onAdd, types,
 }: Props) {
   const listRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<DragState | null>(null);
@@ -156,7 +158,12 @@ export default function StepList({
                 </div>
                 {selected && (
                   <div className="mt-2 border-t pt-2" onClick={(e) => e.stopPropagation()}>
-                    <StepParamCard step={step} onUpdate={(patch) => onUpdate(step.id, patch)} />
+                    <StepParamCard
+  step={step}
+  onUpdate={(patch) => onUpdate(step.id, patch)}
+  onUpdateLive={(patch) => onUpdateLive(step.id, patch)}
+  onBeginEdit={onBeginEdit}
+/>
                   </div>
                 )}
               </div>

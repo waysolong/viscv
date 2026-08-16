@@ -146,6 +146,8 @@ export default function ImageAugmentation() {
               selectedId={editor.selectedId}
               onSelect={editor.select}
               onUpdate={editor.updateStep}
+              onUpdateLive={editor.updateStepLive}
+              onBeginEdit={editor.beginEdit}
               onRemove={editor.removeStep}
               onToggle={editor.toggleStep}
               onMove={editor.moveStep}
